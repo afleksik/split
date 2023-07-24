@@ -15,7 +15,7 @@ char *get_filename(char *filepath)
     int final_length = 0;
     //printf("%d\n", length_path);
 
-    for (i; (filepath[i] != '\\') && (filepath[i] != '/') && i >= 0; --i);
+    for (; (filepath[i] != '\\') && (filepath[i] != '/') && i >= 0; --i);
 
     char *filename = (char*)malloc((length_path - i - 1) * sizeof(char));
 
@@ -37,6 +37,8 @@ char *get_filename(char *filepath)
     }
     char *filename_noformat = (char*)malloc((n + 1) * sizeof(char));
 
+    if (!filename_noformat)
+        return NULL;
     while (filename[m] != '\0' && m < n)
     {
         filename_noformat[j] = filename[m];
