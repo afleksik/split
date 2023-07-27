@@ -94,10 +94,10 @@ int main()
 	// "split_file_01.part"
 	// "split_file_02.part"
 
-	while (part)
-	{
+//	while (part)
+	//{
 		
-	}
+	//}
 
 	fclose(fp);
 	return 0;
