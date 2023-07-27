@@ -30,7 +30,7 @@
 // man 3 basename - посмотреть что такое
 // width = num_length(max_part_num, base) // positive/negative +- 1, 0, INT_MAX, INT_MIN
 // strlen(output_filename) + 1 + width + 1
-// const char * const template = "%s_%0*d", 
+// const char * const template = "%s_%0*d",
 // #define TEMPLATE "%s_%0*d"
 
 // main cycle
@@ -39,10 +39,9 @@
 // - write current part
 // - close
 
-
 // XXX
 // 127 = 100 + 20 + 7 = 1 * 10 ** 2 + 2 * 10 ** 1 + 7 * 10 ** 0
-// 101010111 = 1 * 2**8 + 
+// 101010111 = 1 * 2**8 +
 // 37 = 32 + 4 + 1 = 100101
 // 0000 0000 0000 0000 0000 0000 0010 0101
 // 1 "-"
@@ -60,14 +59,12 @@ static int len_of_number(int n)
 	return len + sign;
 }
 
-static enum e_errors
-{
+static enum e_errors {
 	ESUCCESS,
 	ENOFILE,
 	ENOPARAM,
-	EMULPAR		// multiple params set
+	EMULPAR // multiple params set
 };
-
 
 int split(char *filename, size_t size, size_t parts)
 {
@@ -79,10 +76,10 @@ int split(char *filename, size_t size, size_t parts)
 		return ENOPARAM;
 	if (size != 0 && parts != 0)
 		return EMULPAR;
-	
+
 	if (!(fp = fopen(filename, "r")))
 		return errno;
-	
+
 	if (parts)
 	{
 		// get_filesize();
@@ -90,10 +87,10 @@ int split(char *filename, size_t size, size_t parts)
 	}
 	// while ()
 	// {
-		// fout = fopen(generate_name(filename, part_num), "w");
-		// fread(buf, size, 1, fp);
-		// fwrite(buf, size, 1, fout);
-		// fclose(fout);
+	// fout = fopen(generate_name(filename, part_num), "w");
+	// fread(buf, size, 1, fp);
+	// fwrite(buf, size, 1, fout);
+	// fclose(fout);
 	// }
 	return ESUCCESS;
 }
