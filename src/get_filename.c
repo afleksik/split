@@ -3,45 +3,41 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *get_filename(char *filepath)
+char *get_filename(const char *filepath)
 {
-    int length_path = strlen(filepath);
-    int kol = 0;
-    int k = 0;
-    int j = 0;
-    int n = 0;
-    int m = 0;
-    int i = length_path;
-    int final_length = 0;
-    //printf("%d\n", length_path);
+    const char *basename;
 
-    for (i; (filepath[i] != '\\') && (filepath[i] != '/') && i >= 0; --i);
+    if (!filepath || !filepath[0])
+        return NULL;
+    if (!(basename = strrchr(filepath, '/')))
+        basename = filepath;
+    else
+        ++basename;
+    if (*basename == 0
+        || strcmp(".", basename) == 0 || strcmp("..", basename) == 0)
+        return NULL;
+    return strdup(basename);
+}
 
-    char *filename = (char*)malloc((length_path - i - 1) * sizeof(char));
+char *generate_filename(const char *filename)
+{
+    return NULL;
+}
 
-    while (filepath[++i] != '\0')
-    {
-        filename[k] = filepath[i];
-        ++k;
-    }
+static size_t num_len(size_t n)
+{
+    size_t len = 1;
 
-    final_length = strlen(filename);
-    for (n = final_length; (filename[n] != '.') && n >= 0; --n);
-    char *file_format = (char*)malloc((final_length - n + 1) * sizeof(char));
-    k = 0;
-    while(filename[n - 1] != '\0')
-    {
-        file_format[k] = filename[n];
-        ++k;
-        ++n;
-    }
-    char *filename_noformat = (char*)malloc((n + 1) * sizeof(char));
+    while ((n /= 10))
+        len++;
+    return len;
+}
 
-    while (filename[m] != '\0' && m < n)
-    {
-        filename_noformat[j] = filename[m];
-        ++j;
-        ++m;
-    }
-    return filename_noformat;
+char *filename_add_num(char *filename, size_t part)
+{
+    size_t len = strlen(filename) + num_len(part) + 1; // for '_'
+    char *final = malloc((len + 1) * sizeof(char));
+    if (final)
+        snprintf(final, len, "%s_%zu", filename, part); 
+    return final;
 }
