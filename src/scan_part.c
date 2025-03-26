@@ -1,49 +1,36 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include "../inc/split.h"
 
-int scan_part(const char *filename, int part_size)
-{
-    FILE *file = fopen(filename, "r");
-    int scanned = 0;
-    int i = 0;
-    unsigned char s[part_size];
-    
-    while(!feof(file) && scanned < part_size)
-    {
-        size_t ret = fread(s, 1, part_size, file);
-        for (int i = 0; i < part_size; ++i)
-        {
-            printf("%#02x ", s[i]);
-        }
-        printf("\nReaded = %zu\n\n", ret);
-        scanned++;
+int scan_part(const char *filename, int part_size) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) return -1;
+
+    unsigned char *s = malloc(part_size);
+    if (!s) {
+        fclose(file);
+        return -1;
     }
+
+    size_t total_read = 0;
+    size_t ret;
+    while ((ret = fread(s, 1, part_size, file)) > 0) {
+        for (size_t i = 0; i < ret; ++i)
+            printf("%02x ", s[i]);
+        printf("\nRead = %zu\n\n", ret);
+        total_read += ret;
+    }
+
+    free(s);
     fclose(file);
     return 0;
 }
 
-void bits_out2(int n)
-{
-    for (int i = 0; i < sizeof(int) * 8; )
-    {
+void bits_out2(int n) {
+    for (long unsigned int i = 0; i < sizeof(int) * 8; ++i) {
         printf("%d", (n >> (31 - i)) & 1);
         ++i;
-        if (i % 4 == 0)
-            putchar(' '); // putc(' ', stdout);
+        if (i % 4 == 0) putchar(' ');
     }
-}
-
-// 128 = 2 ^ 7 = 10000000
-// 127 = 1111111
-//           100
-
-int main()
-{
-    // scan_part("a.out", 10);
-
-    bits_out2(123);
-    putchar('\n');
-
-    return 0;
 }

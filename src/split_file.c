@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <getopt.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*
 1. консольное приложение без интерактива
 2. Опции: (-n <parts>|-size <part_size>) [-o output_path] file...
@@ -50,114 +44,86 @@
 // 1111 1111 1111 1111 1111 1111 1101 1010 // инверсный код
 // 1111 1111 1111 1111 1111 1111 1101 1011 // дополнительный код
 
-int len_of_number(int n)
-{
-	int len = 1;
-	int sign = (n < 0);
+#include <stdio.h>
+#include <getopt.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include "../inc/split.h"
 
-	while ((n /= 10))
-		len++;
-	return len + sign;
+void usage(const char *name) {
+	printf("Usage: %s (-n <parts> | -s <size>) [-o output_prefix] file...\n"
+		   "OPTIONS:\n"
+		   "\t-n <parts>\t- split file into <parts> parts\n"
+		   "\t-s <size>\t- split file into parts of <size> bytes\n"
+		   "\t-o <prefix>\t- output filename prefix\n", name);
 }
 
-void usage(const char *name)
-{
-	printf("Usage: %s [-n|-s number] [-o preffix] file...\n"
-		"OPTIONS:\n"
-			"\t-n\t- split file on n parts\n"
-			"\t-s\t- split file on (size bytes) file\n"
-			"\t-o\t- output path\n", name);
-}
+int split(const char *filename, const char *output_prefix, long part_size) {
+	FILE *in = fopen(filename, "rb");
+	if (!in) return errno;
 
+	long total_size = file_size(in);
+	if (total_size < 0) {
+		fclose(in);
+		return EINVAL;
+	}
 
+	size_t part_number = 0;
+	long bytes_remaining = total_size;
+	char *basename = get_filename(output_prefix ? output_prefix : filename);
+	if (!basename) {
+		fclose(in);
+		return EINVAL;
+	}
 
-long file_size(FILE *fd);
-
-int main()
-{
-	// unsigned int n = 0;
-	// int ret = scanf("%u", &n);
-
-	// printf("in - %u\n", n);
-	// printf("ret - %d\n", ret);
-
-	// return 0;
-
-	FILE *fp = fopen("split_file.c", "rb");
-	long size = file_size(fp);
-	printf("file size = %ld\n", size);
-
-	// itoa()
-	// sprintf()
-	// "filename_part.part"
-	// "split_file_00.part"
-	// "split_file_01.part"
-	// "split_file_02.part"
-
-	//while (part)
-	//{
-		
-	//}
-
-	fclose(fp);
-	return 0;
-
-
-	/*int parts = 0;
-	int size = 0;
-	int err = 0;
-	int opt = 0;
-	char *p_e = NULL;
-	char *output_path = NULL;
-
-   	while ((opt = getopt(argc, argv, "n:s:o:")) != -1)
-	{
-		switch (opt)
-		{
-			case 'n':
-				parts = strtol(optarg, &p_e, 10);
-				err = (err
-						|| p_e != optarg + strlen(optarg)
-						|| errno || parts < 0);
-				break;
-			case 's':
-				size = strtol(optarg, &p_e, 10);
-				err = (err
-						|| p_e != optarg + strlen(optarg)
-						|| errno || size < 0);
-				break;
-			case 'o':
-				output_path = strdup(optarg);
-				break;
-			case 'h':
-			default: // '?'
-				usage(argv[0]);
-				return 0;
+	while (bytes_remaining > 0) {
+		long current_part_size = (bytes_remaining > part_size) ? part_size : bytes_remaining;
+		int num_digits = num_len((total_size + part_size - 1) / part_size);
+		char *out_filename = filename_add_num(basename, part_number, num_digits);
+		if (!out_filename) {
+			free(basename);
+			fclose(in);
+			return ENOMEM;
 		}
-	}
-	
-	if (optind >= argc)
-	{
-		fprintf(stderr, "Expected argument after options\n");
-		return -1;
+
+		FILE *out = fopen(out_filename, "wb");
+		if (!out) {
+			free(out_filename);
+			free(basename);
+			fclose(in);
+			return errno;
+		}
+
+		unsigned char *buffer = malloc(current_part_size);
+		if (!buffer) {
+			fclose(out);
+			free(out_filename);
+			free(basename);
+			fclose(in);
+			return ENOMEM;
+		}
+
+		size_t bytes_read = fread(buffer, 1, current_part_size, in);
+		if (bytes_read == 0 && ferror(in)) {
+			free(buffer);
+			fclose(out);
+			free(out_filename);
+			free(basename);
+			fclose(in);
+			return EIO;
+		}
+
+		fwrite(buffer, 1, bytes_read, out);
+		free(buffer);
+		fclose(out);
+		free(out_filename);
+
+		bytes_remaining -= bytes_read;
+		part_number++;
 	}
 
-	if (err)
-	{
-		fprintf(stderr, "Incorrect numbers\n");
-		return -1;
-	}
-	else if (parts >= 0 ^ size >= 0)
-	{
-		fprintf(stderr, "Parts or size must be set.\n");
-		return -1;
-	}
-
-	for (int i = optind; i < argc; ++i)
-	{
-		if ((err = split(argv[i], size, parts)))
-			fprintf(stderr, "split: %s: %s\n", argv[i], strerror(err));
-	}
+	free(basename);
+	fclose(in);
 	return 0;
-	*/
 }

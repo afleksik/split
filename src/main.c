@@ -1,31 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
+#include <errno.h>
+#include "../inc/split.h"
 
+int main(int argc, char **argv) {
+    int opt;
+    long parts = 0, size = 0;
+    char *output_prefix = NULL;
+    int err = 0;
 
-// error list - optional
-// errno = EINVAL
+    while ((opt = getopt(argc, argv, "n:s:o:")) != -1) {
+        if (opt == -1) break;
+        char *endptr;
+        switch (opt) {
+            case 'n':
+                parts = strtol(optarg, &endptr, 10);
+                if (*endptr != '\0' || parts <= 0) err = 1;
+                break;
+            case 's':
+                size = strtol(optarg, &endptr, 10);
+                if (*endptr != '\0' || size <= 0) err = 1;
+                break;
+            case 'o':
+                output_prefix = optarg;
+                break;
+            default:
+                usage(argv[0]);
+                return 1;
+        }
+    }
 
-// int split(char *filename, size_t parts, size_t size)
-// 1 - 10 0
-// 2 - 0 10
-// 3 - 0 0 - EINVAL
-// 4 - 10 10 - EINVAL
+    if (err || optind >= argc || (parts <= 0 && size <= 0) || (parts > 0 && size > 0)) {
+        usage(argv[0]);
+        return 1;
+    }
 
-// new_file_0001
+    for (int i = optind; i < argc; i++) {
+        FILE *fp = fopen(argv[i], "rb");
+        if (!fp) {
+            fprintf(stderr, "Error opening %s: %s\n", argv[i], strerror(errno));
+            continue;
+        }
+        long total_size = file_size(fp);
+        fclose(fp);
 
-// strrchr
+        if (total_size <= 0) {
+            fprintf(stderr, "Invalid file size for %s\n", argv[i]);
+            continue;
+        }
 
-int main()
-{
-    int res = write();
-    // errno ?
+        long part_size = size > 0 ? size : (total_size + parts - 1) / parts;
+        int result = split(argv[i], output_prefix, part_size);
+        if (result != 0)
+            fprintf(stderr, "Failed to split %s: %s\n", argv[i], strerror(result));
+    }
 
     return 0;
 }
-
-
-// file1 - 10M
-// file2 - 20M
-
-// split (file1)
-// split (file2)
