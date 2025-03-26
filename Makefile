@@ -1,35 +1,33 @@
-NAME=		split
+NAME=        split
 
-BIN_DIR=	./bin
-SRC_DIR=	./src
-OBJ_DIR=	./obj
-INC_DIR=	./inc
+BIN_DIR=    ./bin
+SRC_DIR=    ./src
+OBJ_DIR=    ./obj
+INC_DIR=    ./inc
 
-SRCS=		file_size.c get_filename.c main.c scan_part.c split_file.c
-OBJS=		${SRCS:.c=.o}
+SRCS=        file_size.c get_filename.c scan_part.c split_file.c main.c
+OBJS=        ${SRCS:.c=.o}
 
-CC=			gcc
-CFLAGS=		-Wall -Wextra -Wpedantic -g -L${INC_DIR}
+CC=            gcc
+CFLAGS=        -Wall -Wextra -Wpedantic -g -I${INC_DIR}
 LDFLAGS=
 
-.PHONY: clean fclean re
+.PHONY: all clean fclean re
 
-%.o: %.c
-	$(CC) -Wall -Wextra -Werror -I/usr/include -Imlx_linux -O3 -c $< -o $@
+all: ${BIN_DIR}/${NAME}
 
-# $(NAME): $(OBJ)
-# 	$(CC) $(OBJ) -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz -o $(NAME)
+${BIN_DIR}/${NAME}: ${addprefix ${OBJ_DIR}/,${OBJS}}
+	@mkdir -p ${BIN_DIR}
+	${CC} ${CFLAGS} -o $@ $^ ${LDFLAGS}
 
-${NAME}: ${addprefix ${OBJ_DIR}/,${OBJS}}
-	${CC} ${CFLAGS} -o ${BIN_DIR}/${NAME} $? ${LDFLAGS}
-
-${OBJ_DIR}/%.o : ${SRC_DIR}/%.c
-	${CC} ${CFLAGS} -o $@ -c $<
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.c
+	@mkdir -p ${OBJ_DIR}
+	${CC} ${CFLAGS} -c -o $@ $<
 
 clean:
-	rm -f ${addprefix ${OBJ_DIR}/,${OBJS}}
+	rm -rf ${OBJ_DIR}
 
 fclean: clean
-	rm -f ${BIN_DIR}/${NAME}
+	rm -rf ${BIN_DIR}
 
 re: fclean all
